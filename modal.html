@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        body{
+            overflow: hidden;
+        }
+        .modal-mask{
+
+            position: absolute;
+            z-index: 998;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background-color: #000;
+            opacity: .3;
+        }
+        .modal-panel{
+            box-sizing: border-box;
+            padding-top: 12px;
+            background: white;
+            border-radius: 7px;
+            position: absolute;
+            z-index: 999;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            margin: auto;
+            text-align: center;
+            overflow: hidden;
+            box-shadow: 0 0 7px 0 #666;
+        }
+        .modal-panel p {
+            margin-bottom: 10px;
+        }
+        .modal-action-group{
+            width: 100%;
+            height: 35px;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            border-top: .5px solid rgba(0,0,0,.3);
+            box-sizing: border-box;
+        }
+        .modal-action{
+            display: inline-block;
+            width: 50%;
+            height: 35px;
+            text-align: center;
+            line-height:35px;
+        }
+        .modal-action-left{
+            box-sizing: border-box;
+            border-right: .5px solid rgba(0,0,0,.3);
+        }
+        .modal-leave{
+            transition: all .3s ease-out ;
+            left: 101%;
+            opacity: 0;
+        }
+        .modal-mask-hide{
+            transition: all .3s ease-out ;
+            opacity: 0;
+        }
+        img{
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+<img src="./logo.png" alt="logo"/>
+</body>
+<script>
+
+    ;(function(win,doc){
+
+        function Modal(config){
+            this.config = config ;
+            this.render();
+            this.actions=this.getActions();
+            this.bindActions();
+            // this.hidden();
+        };
+
+        Modal.prototype = {
+            constructor:Modal,
+            render:function(){
+                var mask,panel;
+                var tmp_wramp = document.createDocumentFragment();
+                mask = document.createElement("div");
+                mask.className = 'modal-mask';
+                tmp_wramp.appendChild(mask);
+                panel = document.createElement("div");
+                panel.className = 'modal-panel';
+                Modal.tools.attr(panel,"width",this.config.width);
+                Modal.tools.attr(panel,"height",this.config.height);
+                panel.innerHTML="<p><b>"+this.config.title+"</b></p><span>"+
+                                this.config.content+"</span><div class='modal-action-group'>"+
+                                "<span class='modal-action modal-action-left'>"+this.config.action[0].actionName+
+                                "</span><span class='modal-action'>"+this.config.action[1].actionName+"</span>"+"</div>";
+
+                tmp_wramp.appendChild(panel);
+                doc.getElementsByTagName("body")[0].appendChild(tmp_wramp);
+            },
+            getActions:function(){
+                var modal_container = document.getElementsByClassName("modal-panel")[0];
+                var actions =modal_container.getElementsByClassName("modal-action");
+                return actions;
+            },
+            bindActions:function(){
+                   this.bindEvent(this.actions[0],"click",this.config.action[0].action);
+                   this.bindEvent(this.actions[1],"click",this.config.action[1].action);
+            },
+            hidden:function(){
+                var modal_panel = document.getElementsByClassName("modal-panel")[0];
+                var modal_mask = document.getElementsByClassName("modal-mask")[0];
+                Modal.tools.addClass(modal_mask,"modal-mask-hide");
+                Modal.tools.addClass(modal_panel,"modal-leave");
+                doc.getElementsByTagName("body")[0].removeChild(modal_mask);
+                doc.getElementsByTagName("body")[0].removeChild(modal_panel);
+            },
+            bindEvent:function(dom,type,fn){
+                var that = this ;
+                dom.addEventListener(type,function(){
+                    fn();
+                    that.hidden();
+                });
+            }
+        };
+
+        Modal.tools={
+            attr:function(dom,attrName,attrVal){
+                var arg_len = arguments.length;
+                if(dom instanceof Object){
+                    if(arg_len==2&&attrName instanceof String){
+                        return dom.style[attrName];
+                    }else if(arg_len == 3){
+                        dom.style[attrName]=attrVal;
+                        return true;
+                    }else {
+                        throw new Error("参数至少为2个!")
+                    }
+                }
+            },
+            addClass:function(dom,className){
+                var oldClass = dom.getAttribute("class");
+                dom.setAttribute("class",oldClass+" "+className);
+            }
+
+        };
+
+        win["Modal"]  = Modal;
+
+
+    })(window,document,undefined);
+
+    var cfg = {
+                width:"70%",
+                height:"20%",
+                title:"提示",
+                content:'要卸载"王者荣耀"吗?',
+                action:[
+                    {
+                        actionName:"卸载",
+                        action:function(){alert("卸载？不存在的")}
+                    },{
+                        actionName:"取消",
+                        action:function(hidden){}
+                    }
+                ]
+            };
+    var logo = document.getElementsByTagName("img")[0];
+    var timeOutEvent = 0;
+    logo.addEventListener("touchstart",function(e){
+        timeOutEvent = setTimeout("longPress()",2000);
+        e.preventDefault()
+    });
+    function longPress(){
+        timeOutEvent = 0;
+        new Modal(cfg)
+    }
+</script>
+</html>
